@@ -43,8 +43,8 @@ def get_frame(video, t_frame=0.0):
 
 
 def crop_examples(video, crop, destination=None):
-    dst_path = Path(Path(video).parent).resolve() if destination is None else Path(destination).resolve()
     video_path = Path(video)
+    dst_path = Path(video_path.parent if destination is None else destination).resolve()
 
     image_original = get_frame(video)
     image_cropped = crop_frame(image_original, *crop)

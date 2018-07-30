@@ -13,9 +13,7 @@ from pose_tensorflow.dataset.pose_dataset import data_to_input
 
 
 def predict_video(config, video):
-    """Apply previously estimated joint locations to the video predictions were
-    made for."""
-    # TODO: Writing video is not working correctly, original LC class did that well though.
+    """Predict joint locations for video frames."""
 
     config_path = Path(config).resolve()
     assert config_path.exists()
@@ -36,7 +34,7 @@ def predict_video(config, video):
     snapshots = [s.with_suffix('').name for s in training_path.glob('snapshot-*.index')]
     latest_snapshot_id = max([int(s[len('snapshot-'):]) for s in snapshots])
     latest_snapshot = 'snapshot-{}'.format(latest_snapshot_id)
-    snapshot_path =  training_path / latest_snapshot
+    snapshot_path = training_path / latest_snapshot
     print('Using snapshot {} at "{}'.format(latest_snapshot_id, snapshot_path))
 
     cfg['init_weights'] = str(snapshot_path)
@@ -58,8 +56,6 @@ def predict_video(config, video):
         scmap, locref = ptf_predict.extract_cnn_output(outputs_np, cfg)
         pose = ptf_predict.argmax_pose_predict(scmap, locref, cfg.stride)
         predictions[n, :] = pose.flatten()
-        if not n:
-            print(pose)
 
     print('Storing results')
     DataMachine = pd.DataFrame(predictions[:n, :], columns=pdindex, index=range(n))
