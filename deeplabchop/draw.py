@@ -13,35 +13,41 @@ PCUTOFF = .1
 DEFAULT_COLORMAP = 'RdYlGn'
 
 
-def draw_predictions_video(results, video):
-    scorer = 'DeepCut_resnet50_social_interactionJan30shuffle1_200000'
-    clip = VideoFileClip(video)
+def draw_predictions_video(results, video, markersize=4, cmap_name=DEFAULT_COLORMAP, p_cutoff=PCUTOFF):
+    """Draw pre-calculated joint locations into video frames.
+    """
+    video_path = Path(video)
+
+    clip = VideoFileClip(str(video_path)).to_RGB()
+
     ny, nx, fps = clip.h, clip.w, clip.fps
+    print(ny, nx, fps)
 
     df = pd.read_hdf(results)
+    scorer = 'reichler'
 
     joints = list(np.unique(df.columns.get_level_values(1)))
 
-    cmap = plt.cm.get_cmap(DEFAULT_COLORMAP, len(joints))
-    print(cmap(1)[:3])
-    # colors = (C[:, :3] * 255).astype(np.uint8)
+    cmap = plt.cm.get_cmap(cmap_name, len(joints))
 
-    clip_out = io.FFmpegWriter('labeled.mp4', outputdict={'-r': str(15)})
+    clip_out = io.FFmpegWriter(str(video_path.with_suffix('.labeled.mp4')), outputdict={'-r': str(clip.fps)})
+
     num_frames = math.ceil(clip.duration*clip.fps)
 
     for index, frame in enumerate(tqdm(clip.iter_frames(dtype='uint8'), total=num_frames)):
         for bpindex, bp in enumerate(joints):
-            if df[scorer][bp]['likelihood'].values[index] > PCUTOFF:
+            if df[scorer][bp]['likelihood'].values[index] > p_cutoff:
                 xc = int(df[scorer][bp]['x'].values[index])
                 yc = int(df[scorer][bp]['y'].values[index])
-                # rr, cc = circle_perimeter(yc,xc,radius)
-                # if not index:
-                #     print(xc, yc)
-                rr, cc = draw.circle(yc, xc, 3, shape=(ny, nx))
+                # rr, cc = circle_perimeter(yc, xc, radius)
+                # tqdm.write(str((xc, yc, bp)))
+                rr, cc = draw.circle(yc, xc, markersize, shape=(ny, nx))
                 frame[rr, cc, :] = [c * 255 for c in cmap(bpindex)[:3]]
-            clip_out.writeFrame(frame)
-    clip.close()
+
+        clip_out.writeFrame(frame)
+
     clip_out.close()
+    clip.close()
 
 
 if __name__ == '__main__':
