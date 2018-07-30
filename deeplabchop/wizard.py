@@ -3,7 +3,7 @@ from pathlib import Path
 import pkg_resources
 
 from tqdm import trange, tqdm
-from deeplabchop import DEBUG, util, status, extract, label, shuffle
+from deeplabchop import DEBUG, util, status, extract, label, shuffle, training
 
 
 def _echo(s):
@@ -211,11 +211,12 @@ def step(project):
     # Training
     # -------------------------------------------------------------------------------------------
     if 'Trained' not in project_status or not project_status['Trained']:
-        _echo('READY FOR TRAINING!')
-        _echo('Train shuffles with "dlc train [path_to_cfg]')
+        _echo('Start training...')
         shuffles = [d.resolve() for d in project.joinpath('shuffles').glob('*') if d.is_dir()]
-
-        _echo('Training starting for: {}'.format('NOTHING'))
+        for shfl in shuffles:
+            cfg_yaml_path = shfl / 'train/pose_cfg.yaml'
+            _echo('Training starting for: {}'.format(cfg_yaml_path))
+            training.train(cfg_yaml_path)
         return
     else:
         _echo('Training completed (to some degree')

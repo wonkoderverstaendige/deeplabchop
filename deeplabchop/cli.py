@@ -2,7 +2,6 @@ import os
 import click
 from pathlib import Path
 
-from pose_tensorflow import train as ptf_train
 import deeplabchop
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -57,16 +56,7 @@ def wizard(_, project):
 @click.pass_context
 def train(_, config):
     """Train a model with training data."""
-    start_path = Path.cwd()
-    config_path = Path(config).resolve()
-    wd = config_path.parent
-    os.chdir(str(wd))
-    try:
-        ptf_train.train(config_path)
-    except BaseException as e:
-        raise e
-    finally:
-        os.chdir(str(start_path))
+    deeplabchop.training.train(config)
 
 
 @main.command(context_settings=CONTEXT_SETTINGS)
