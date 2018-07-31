@@ -21,7 +21,6 @@ def draw_predictions_video(results, video, markersize=4, cmap_name=DEFAULT_COLOR
     clip = VideoFileClip(str(video_path)).to_RGB()
 
     ny, nx, fps = clip.h, clip.w, clip.fps
-    print(ny, nx, fps)
 
     df = pd.read_hdf(results)
     scorer = 'reichler'
@@ -30,7 +29,9 @@ def draw_predictions_video(results, video, markersize=4, cmap_name=DEFAULT_COLOR
 
     cmap = plt.cm.get_cmap(cmap_name, len(joints))
 
-    clip_out = io.FFmpegWriter(str(video_path.with_suffix('.labeled.mp4')), outputdict={'-r': str(clip.fps)})
+    clip_out = io.FFmpegWriter(str(video_path.with_suffix('.labeled.mp4')),
+                               inputdict={'-r': str(clip.fps)},
+                               outputdict={'-r': str(clip.fps)})
 
     num_frames = math.ceil(clip.duration*clip.fps)
 
