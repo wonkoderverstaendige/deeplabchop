@@ -58,9 +58,9 @@ def predict_video(config, video):
         predictions[n, :] = pose.flatten()
 
     print('Storing results')
-    DataMachine = pd.DataFrame(predictions[:n, :], columns=pdindex, index=range(n))
-    DataMachine.to_hdf(video_path.with_suffix('.h5'), 'df_with_missing', format='table', mode='w')
-    DataMachine.to_csv(video_path.with_suffix('.csv'))
+    df = pd.DataFrame(predictions[:n, :], columns=pdindex, index=range(n))
+    df.to_hdf(video_path.with_suffix('.h5'), 'df_with_missing', format='table', mode='w')
+    df.to_csv(video_path.with_suffix('.csv'))
 
 
 if __name__ == '__main__':
