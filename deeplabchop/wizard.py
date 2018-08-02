@@ -98,7 +98,8 @@ def step(project):
     if 'Annotated' not in project_status or not project_status['Annotated']:
         _echo('Looking for joint annotation files...')
         for n, (video, metadata) in enumerate(cfg['image_sets'].items()):
-            img_path = project / Path(metadata['img_path']).resolve()
+            img_path = (project / Path(metadata['img_path'])).resolve()
+            print(project)
             if not img_path.joinpath('Results.csv').exists():
                 print('Missing `Results.csv` for {}'.format(img_path))
                 return
