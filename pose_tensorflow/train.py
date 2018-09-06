@@ -14,15 +14,19 @@ from .util.logging import setup_logging
 
 
 class LearningRate(object):
-    def __init__(self, cfg):
+    def __init__(self, cfg, continuous = True):
         self.steps = cfg.multi_step
         self.current_step = 0
-
+        self.continuous = continuous
+        
     def get_lr(self, iteration):
-        lr = self.steps[self.current_step][0]
-        if iteration == self.steps[self.current_step][1]:
-            self.current_step += 1
-
+        if self.continuous: 
+            lr = (self.current_step*0.0001)*(0.9**(self.current_step*0.0001))*0.005 
+            self.current_step+=1
+        else:
+            lr = self.steps[self.current_step][0]
+            if iteration == self.steps[self.current_step][1]:
+                self.current_step += 1
         return lr
 
 
@@ -144,10 +148,10 @@ def train(config_yaml):
     coord.request_stop()
     coord.join([thread])
 
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('config', help='Path to yaml configuration file.')
-    cli_args = parser.parse_args()
-
-    train(Path(cli_args.config).resolve())
+#
+#if __name__ == '__main__':
+#    parser = argparse.ArgumentParser()
+#    parser.add_argument('config', help='Path to yaml configuration file.')
+#    cli_args = parser.parse_args()
+#
+#    train(Path(cli_args.config).resolve())
