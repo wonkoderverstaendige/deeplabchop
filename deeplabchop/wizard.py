@@ -3,7 +3,7 @@ from pathlib import Path
 import pkg_resources
 
 from tqdm import trange, tqdm
-from deeplabchop import DEBUG, util, status, extract, label, shuffle, training
+from deeplabchop import DEBUG, util, status, extract, label, shuffle, training, GUI_utils
 
 
 def _echo(s):
@@ -69,7 +69,7 @@ def step(project):
     # -------------------------------------------------------------------------------------------
     if 'FrameExtraction' not in project_status or not project_status['FrameExtraction']:
         _echo('Next up: Creating image sets...')
-        num_frames = int(cfg['num_frames']) // len(cfg['image_sets'])
+        num_frames = max(2,int(cfg['num_frames']) // len(cfg['image_sets']))
 
         # Loop over all video files specified in the project configuration
         # Total number of frames is evenly divided between the videos.
@@ -77,6 +77,7 @@ def step(project):
         # video might have duplicates extracted!
         # TODO: Distribute extracted frames according to video length
         for n, (video, metadata) in enumerate(cfg['image_sets'].items()):
+            Path.mkdir(project / metadata['img_path'])
             video_path = Path(video)
             crop = list(map(int, metadata['crop'].split(',')))
             seed = int(cfg['random_seed']) + n
@@ -96,19 +97,23 @@ def step(project):
     # User annotation of joint position in image set
     # -------------------------------------------------------------------------------------------
     if 'Annotated' not in project_status or not project_status['Annotated']:
-        _echo('Looking for joint annotation files...')
-        for n, (video, metadata) in enumerate(cfg['image_sets'].items()):
-            img_path = (project / Path(metadata['img_path'])).resolve()
-            print(project)
-            if not img_path.joinpath('Results.csv').exists():
-                print('Missing `Results.csv` for {}'.format(img_path))
-                return
+        do_labeling = input('Run labeling GUI? [Y/n]')
+        if not do_labeling in ['N','n']:
+            GUI_utils.run_labeler(cfg,root=project)
+        else:
+            _echo('Looking for joint annotation files...')
+            for n, (video, metadata) in enumerate(cfg['image_sets'].items()):
+                img_path = (project / Path(metadata['img_path'])).resolve()
+                print(img_path)
+                if not img_path.joinpath('Results.csv').exists():
+                    print('Missing `Results.csv` for {}'.format(img_path))
+                    return
 
-            # Minimize ImageJ csv
-            joints = cfg['joints']
-            print(joints)
-            label.reduce_imagej_csv(img_path, cfg['joints'], cfg['experimenter'])
-
+                # Minimize ImageJ csv
+                joints = cfg['joints']
+                print(joints)
+                label.reduce_imagej_csv(img_path, cfg['joints'], cfg['experimenter'])
+        
         util.update_yaml(project / 'status.yaml', {'Annotated': True})
         _echo('Minimized {} image set label file(s).'.format(len(cfg['image_sets'])))
     else:
@@ -120,6 +125,7 @@ def step(project):
     if 'TrainingLabelsDrawn' not in project_status or not project_status['TrainingLabelsDrawn']:
         _echo('Drawing labels on images in data sets for verification...')
         for n, (video, metadata) in enumerate(cfg['image_sets'].items()):
+            print(video,metadata)
             label.draw_image_labels(project / metadata['img_path'] / 'multijoint.csv', cfg['joints'],
                                     cmap_name=cfg['cmap'] if 'cmap' in cfg else None)
         util.update_yaml(project / 'status.yaml', {'TrainingLabelsDrawn': True})
@@ -235,3 +241,6 @@ def step(project):
         return
     else:
         _echo('Use me!')
+        
+
+
