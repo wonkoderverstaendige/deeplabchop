@@ -17,7 +17,6 @@ cd ../../..
 python dlc.py #to see options
 python dlc.py new projects/PROJECT_NAME EXPERIMENTER_NAME #to create new project
 
-
 ### now call the following line multiple times
 ### after 1st wizard: check cropped frame in project_folder/data/, then delete all folders inside data
 python dlc.py wizard projects/PROJECT_NAME_WITH_DATE # yes with date! tab it
