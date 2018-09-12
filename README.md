@@ -2,7 +2,7 @@ Experimental rebuild of the DeepLabCut toolbox.
 
 Please refer to the original [DeepLabCut](https://github.com/AlexEMG/DeepLabCut) repository.
 
-# Installation guide
+# Installation guide for linux 
 git clone https://github.com/wonkoderverstaendige/deeplabchop
 
 cd deeplabchop
@@ -14,7 +14,7 @@ conda install -c anaconda tensorflow-gpu # If not gpu, remove " -gpu"
 python setup.py install
 
 
- **to download the pre-trained DeepLabCut (ResNet) model, run:**
+ -**To download the pre-trained DeepLabCut (ResNet) model, run:**
  
 cd pose_tensorflow/models/pretrained/
 
@@ -26,7 +26,7 @@ python dlc.py #to see options
 
 python dlc.py new projects/PROJECT_NAME EXPERIMENTER_NAME #to create new project
 
-**now call the following line multiple times
+-**Now call the following line multiple times
 after 1st wizard: check cropped frame in project_folder/data/, then delete all folders inside data**
 
 python dlc.py wizard projects/PROJECT_NAME_WITH_DATE # yes with date! tab it
