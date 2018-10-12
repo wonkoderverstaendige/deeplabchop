@@ -13,6 +13,7 @@ from .nnet.pose_net import get_batch_spec
 from .util.logging import setup_logging
 
 
+
 class LearningRate(object):
     def __init__(self, cfg, continuous = True):
         self.steps = cfg.multi_step
@@ -79,9 +80,12 @@ def get_optimizer(loss_op, cfg):
     return learning_rate, train_op
 
 
+
+
 def train(config_yaml):
     setup_logging()
 
+    config_path = Path(config_yaml).resolve() 
     cfg = load_config(config_yaml)
     dataset = create_dataset(cfg)
 
@@ -120,15 +124,36 @@ def train(config_yaml):
     cum_loss = 0.0
     lr_gen = LearningRate(cfg)
 
-    stats_path = Path(config_yaml).with_name('learning_stats.csv')
-    lrf = open(stats_path, 'w')
 
-    for it in range(max_iter+1):
+    # Continue with training existing network if possible
+    print('Looking for latest snapshot (if any)...')
+    assert config_path.exists()
+    training_path = config_path.parent
+    stats_path = Path(config_yaml).with_name('learning_stats.csv')
+    snapshots = [s.with_suffix('').name for s in training_path.glob('snapshot-*.index')]
+    if len(snapshots) > 0:
+        latest_snapshot_id = max([int(s[len('snapshot-'):]) for s in snapshots])
+        latest_snapshot = 'snapshot-{}'.format(latest_snapshot_id)
+        snapshot_path = training_path / latest_snapshot
+        start_iter = int(latest_snapshot.rsplit('-')[-1])
+        print("Latest snapshot:", start_iter)
+        saver.restore(sess, str(snapshot_path))
+        lrf = open(stats_path, 'a') # a for append to old one
+    else:
+        print("No previous trained models found, training from iteration 1....")
+        start_iter = 0
+        lrf = open(stats_path, 'w') # w for write over whatever, I'm starting a new model anyway.
+        lrf.write("iteration, average_loss, learning_rate\n".format())
+
+
+
+    for it in range(start_iter + 1, max_iter+1):
         current_lr = lr_gen.get_lr(it)
         [_, loss_val, summary] = sess.run([train_op, total_loss, merged_summaries],
                                           feed_dict={learning_rate: current_lr})
         cum_loss += loss_val
         train_writer.add_summary(summary, it)
+
 
         if it % display_iters == 0:
             average_loss = cum_loss / display_iters
@@ -142,6 +167,9 @@ def train(config_yaml):
         if (it % cfg.save_iters == 0 and it != 0) or it == max_iter:
             model_name = cfg.snapshot_prefix
             saver.save(sess, model_name, global_step=it)
+            print("Saved latest model...")
+
+
 
     lrf.close()
     sess.close()
