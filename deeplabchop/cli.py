@@ -45,10 +45,18 @@ def new(_, *args, **kwargs):
 
 @main.command(context_settings=CONTEXT_SETTINGS)
 @click.argument('project')
+@click.argument('step', default="auto", required=False)
 @click.pass_context
-def wizard(_, project):
-    """Step through project creation steps """
-    deeplabchop.wizard.step(project)
+def wizard(_, project, step):
+    """Step through project creation steps.
+
+    Requires argument PROJECT_NAME \n
+    Optional argument STEP \n
+    List of steps:
+    """
+
+    #deeplabchop.wizard.step(project)
+    deeplabchop.wizard.step(project, step)
 
 
 @main.command(context_settings=CONTEXT_SETTINGS)
